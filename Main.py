@@ -12,6 +12,7 @@ user = UserInfo()
 # user.create_base64_userInfo('account', 'password')
 user.load_userInfo()
 
+
 _ = login(opener, user.account, user.password)
 
 _ = get_class(opener, user.account)
