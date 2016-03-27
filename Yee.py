@@ -1,28 +1,14 @@
 # encoding=utf8
-import base64
 import urllib
 import urllib2
 from BeautifulSoup import BeautifulSoup
-from Info import cookieHandler
-from Info.UserInfo import UserInfo
-
-# 保存登入資訊
-opener = cookieHandler.opener
-user = UserInfo()
-# user.create_base64_userInfo('account', 'password')
-user.load_userInfo()
-
-account = user.account
-password = user.password
 
 
-def login():
-    global opener
+def login(opener, account, password):
     # 登入網址
     url = 'https://portalx.yzu.edu.tw/PortalSocialVB/Login.aspx'
     html = urllib2.urlopen(url).read()
     html = BeautifulSoup(html)
-
     # post data
     data = {}
     data['Txt_UserID'] = account
@@ -37,16 +23,14 @@ def login():
     info = opener.open(url, data).read()
     # <script>window.location='./FMain/DefaultPage.aspx?Menu=Default&LogExcute=Y';</script>
     # 代表登入成功
-    print info
+    return info
 
 
-def get_class():
-    global opener
+def get_class(opener, account):
     # 模擬點集課表，為了得到session資料
-    url = 'https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S5'
-    opener.open(url)
-    url = 'https://portalx.yzu.edu.tw/PortalSocialVB/IFrameSub.aspx'  # 裡面有session資料
-    html = opener.open(url).read()
+    opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S5')
+    # 裡面有session資料
+    html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/IFrameSub.aspx').read()
     html = BeautifulSoup(html)
 
     # 取得 sessionID
@@ -55,19 +39,12 @@ def get_class():
     UseType = html.find('input', {'id': 'UseType'}).get('value')
     url = 'https://portal.yzu.edu.tw/VC2/FFB_Login.aspx?sys=STD_Schedule'  # 需要post檢查認證
 
-    data = {}
-    data['Account'] = account
-    data['SessionID'] = sessionID
-    data['LangVersion'] = LangVersion
-    data['UseType'] = UseType
+    data = {'Account': account, 'SessionID': sessionID,
+            'LangVersion': LangVersion, 'UseType': UseType}
     data = urllib.urlencode(data)
 
-    html = opener.open(url, data).read()
-    return html
+    info = opener.open(url, data).read()
+    return info
 
-
-login()
-class_info = get_class()
-f = open('class.html', 'w')
-f.write(class_info)
-cookieHandler.cookie.save(ignore_discard=True, ignore_expires=True)
+if __name__ == "__main__":
+    print 'YEE'
