@@ -55,3 +55,4 @@ def fill_questions(opener, value):
 
         data = urllib.urlencode(data)  # 編碼
         opener.open('https://portal.yzu.edu.tw/NewSurvey/std/' + url, data)  # 送資料
+    print "完成"

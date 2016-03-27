@@ -7,23 +7,26 @@ from BeautifulSoup import BeautifulSoup
 def login(opener, account, password):
     # 登入網址
     url = 'https://portalx.yzu.edu.tw/PortalSocialVB/Login.aspx'
-    html = urllib2.urlopen(url).read()
-    html = BeautifulSoup(html)
-    # post data
-    data = {}
-    data['Txt_UserID'] = account
-    data['Txt_Password'] = password
-    # asp.net特有的資料也要post過去
-    data['__EVENTVALIDATION'] = html.find('input', {'id': '__EVENTVALIDATION'}).get('value')
-    data['__VIEWSTATE'] = html.find('input', {'id': '__VIEWSTATE'}).get('value')
-    data['ibnSubmit'] = '登入'
-    # 編碼
-    data = urllib.urlencode(data)
-    # 使用有cookie的方式傳送
-    info = opener.open(url, data).read()
-    # <script>window.location='./FMain/DefaultPage.aspx?Menu=Default&LogExcute=Y';</script>
-    # 代表登入成功
-    return info
+    try:
+        html = urllib2.urlopen(url).read()
+        html = BeautifulSoup(html)
+        # post data
+        data = {}
+        data['Txt_UserID'] = account
+        data['Txt_Password'] = password
+        # asp.net特有的資料也要post過去
+        data['__EVENTVALIDATION'] = html.find('input', {'id': '__EVENTVALIDATION'}).get('value')
+        data['__VIEWSTATE'] = html.find('input', {'id': '__VIEWSTATE'}).get('value')
+        data['ibnSubmit'] = '登入'
+        # 編碼
+        data = urllib.urlencode(data)
+        # 使用有cookie的方式傳送
+        info = opener.open(url, data).read()
+        # <script>window.location='./FMain/DefaultPage.aspx?Menu=Default&LogExcute=Y';</script>
+        # 代表登入成功
+        return info
+    except:
+        return "fail"
 
 
 def get_class(opener, account):
