@@ -1,7 +1,7 @@
 # encoding=utf8
 import urllib
 import urllib2
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 
 def login(opener, account, password):
@@ -9,7 +9,7 @@ def login(opener, account, password):
     url = 'https://portalx.yzu.edu.tw/PortalSocialVB/Login.aspx'
     try:
         html = urllib2.urlopen(url).read()
-        html = BeautifulSoup(html)
+        html = BeautifulSoup(html, "html.parser")
         # post data
         data = {}
         data['Txt_UserID'] = account
@@ -29,12 +29,35 @@ def login(opener, account, password):
         return "fail"
 
 
-def get_class(opener, account):
+def get_class_table(info):
+    info = BeautifulSoup(info, "html.parser")
+    table = info.find('table', {'id': 'Table1'})  # 問卷的table
+    trs = table.findAll('tr')
+    time_table=[]
+    class_table={}
+    for tr in trs:
+        row = []
+        for td in tr:
+            row.append(td.string)
+            try:
+                class_table[td.a.string] = td.a.get("href")
+            except:
+                pass
+        time_table.append(row)
+    return time_table, class_table
+
+
+def get_class(opener):
+    # 取得使用者帳號ID
+    html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPage.aspx?Menu=Default').read()
+    html = BeautifulSoup(html, "html.parser")
+    account = html.find('div', {'id': 'MainBar_divUserID'}).string
+
     # 模擬點集課表，為了得到session資料
     opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S5')
     # 裡面有session資料
     html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/IFrameSub.aspx').read()
-    html = BeautifulSoup(html)
+    html = BeautifulSoup(html, "html.parser")
 
     # 取得 sessionID
     sessionID = html.find('input', {'id': 'SessionID'}).get('value')
@@ -47,7 +70,9 @@ def get_class(opener, account):
     data = urllib.urlencode(data)
 
     info = opener.open(url, data).read()
-    return info
+
+    return get_class_table(info)
+
 
 if __name__ == "__main__":
     print 'YEE'

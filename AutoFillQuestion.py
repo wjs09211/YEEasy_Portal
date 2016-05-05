@@ -1,15 +1,19 @@
 # encoding=utf8
 import urllib
 import urllib2
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 question_info = {}
 
-def AutoFillQuestion(opener, account, value):
-    opener.open("https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPage.aspx?Menu=Default").read()  # 首頁
+def AutoFillQuestion(opener, value):
+     # 取得使用者帳號ID
+    html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPage.aspx?Menu=Default').read()
+    html = BeautifulSoup(html, "html.parser")
+    account = html.find('div', {'id': 'MainBar_divUserID'}).string
+
     opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S5')  # 左邊的選單
     html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/IFrameSub.aspx').read()  # 裡面有session資料
-    html = BeautifulSoup(html)
+    html = BeautifulSoup(html, "html.parser")
 
     # 取得 sessionID
     sessionID = html.find('input', {'id': 'SessionID'}).get('value')
@@ -21,6 +25,9 @@ def AutoFillQuestion(opener, account, value):
     data = urllib.urlencode(data)
     opener.open('https://portal.yzu.edu.tw/NewSurvey/NewLogin.aspx', data)  # 需要post檢查認證
     html = opener.open('https://portal.yzu.edu.tw/NewSurvey/std/F01_Questionnaire.aspx').read()  # 到了問卷頁面
+    if html.find("查無待填問卷") != -1:
+        print "查無待填問卷"
+        return
     # 取得問卷網址
     get_question_info(html)
     # 填寫
@@ -29,7 +36,7 @@ def AutoFillQuestion(opener, account, value):
 
 
 def get_question_info(html):
-    html = BeautifulSoup(html)
+    html = BeautifulSoup(html, "html.parser")
     html = html.find('table', {'class': 'table_1'})
     tds = html.findAll('td')
     for i, td in enumerate(tds):
@@ -40,7 +47,7 @@ def get_question_info(html):
 def fill_questions(opener, value):
     for class_name, url in question_info.iteritems():
         html = opener.open('https://portal.yzu.edu.tw/NewSurvey/std/' + url).read()  # 到問卷網頁
-        html = BeautifulSoup(html)
+        html = BeautifulSoup(html, "html.parser")
         data = {}  # post_data
         # asp.net特有的資料要post過去
         data['__EVENTVALIDATION'] = html.find('input', {'id': '__EVENTVALIDATION'}).get('value')

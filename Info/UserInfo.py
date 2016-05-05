@@ -22,3 +22,7 @@ class UserInfo:
             self.password = base64.b64decode(password)
         except:
             print "no file"
+
+# user = UserInfo()
+# user.create_base64_userInfo('account', 'passwd')
+# user.load_userInfo()
