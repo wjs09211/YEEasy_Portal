@@ -1,4 +1,4 @@
-# encoding=utf8
+# -*- coding: utf-8 -*-
 import urllib
 import urllib2
 from bs4 import BeautifulSoup
@@ -18,13 +18,20 @@ def check_cookie():
         return True
 
 parser = argparse.ArgumentParser(description='YEE')
-parser.add_argument('-l', '--login', nargs=2)
-parser.add_argument('-ct', '--class_timetable', action='store_true')
+parser.add_argument('-l', '--login', action='store_true')
+parser.add_argument('-c', '--classs', action='store_true')
+parser.add_argument('-cs', '--class_schedule', action='store_true')
+parser.add_argument('-i', '--class_info', nargs=1)
+parser.add_argument('-t', '--teach_material', nargs=1)
 args = parser.parse_args()
 
-if args.login is not None:
+# region login
+if args.login:
+    import getpass
+    account = raw_input('account: ')
+    pwd = getpass.getpass('password: ')
     opener = cookieHandler.get_cookie(True)
-    info = login(opener, args.login[0], args.login[1])
+    info = login(opener, account, pwd)
     print info
     if info.find("請輸入使用者帳號密碼") != -1 or info.find("登入失敗") != -1 or info.find("異常") != -1 or info.find("fail") != -1:
         print "登入失敗"
@@ -40,10 +47,20 @@ else:
 
 if not check_cookie():
     exit()
+# endregion
 
-# time_table, class_table = get_class(opener)
-# print class_table
-# get_class_info(opener, "CS362")
-get_class_book(opener, "CS362")
+if args.classs:
+    schedule_table, class_table = get_class(opener)
+    for rows in class_table:
+        print rows.split()[0], rows.split()[2]
+elif args.class_schedule:
+    schedule_table, class_table = get_class(opener)
+    for rows in schedule_table:
+        print rows
+elif args.class_info is not None:
+    get_class_info(opener, args.class_info[0])
+elif args.teach_material is not None:
+    get_class_book(opener, args.teach_material[0], True)
+
 # AutoFillQuestion(opener, 1)
 

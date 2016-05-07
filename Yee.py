@@ -25,16 +25,19 @@ def login(opener, account, password):
         info = opener.open(url, data).read()
         # <script>window.location='./FMain/DefaultPage.aspx?Menu=Default&LogExcute=Y';</script>
         # 代表登入成功
-        return info
+        if info.find("FMain/DefaultPage.aspx") != -1:
+            return "login success"
+        else:
+            return "login fail"
     except:
-        return "fail"
+        return "something error"
 
 
 def get_class_table(info):
     info = BeautifulSoup(info, "html.parser")
     table = info.find('table', {'id': 'Table1'})  # 問卷的table
     trs = table.findAll('tr')
-    time_table = []
+    schedule_table = []
     class_table = {}
     for tr in trs:
         row = []
@@ -44,8 +47,8 @@ def get_class_table(info):
                 class_table[td.a.string] = td.a.get("href")
             except:
                 pass
-        time_table.append(row)
-    return time_table, class_table
+        schedule_table.append(row)
+    return schedule_table, class_table
 
 
 def get_class(opener):
@@ -116,23 +119,39 @@ def get_class_info(opener, class_name):
             pass
 
 
-def get_class_book(opener, class_name):
+def get_class_book(opener, class_name, show=False):
     _, class_table = get_class(opener)
     url = ""
     for key, value in class_table.iteritems():
         if unicode(key).split()[0] == class_name:
             url = value
-    # https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Materials_S
     opener.open(url)
     html = opener.open("https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Materials_S").read()
+    # 可給耀文parser
     html = BeautifulSoup(html, "html.parser")
 
     tds = html.findAll('td', {"class": ['record2', 'hi_line']})
 
-    for td in tds:
-        print td
+    data = []
+    temp = []
+    for i, td in enumerate(tds):
+        if i % 7 == 0:
+            temp.append(td.text[1:-1])
+        if i % 7 == 4:
+            temp.append(td.text[3:-1])
+        elif i % 7 == 1:
+            temp.append("https://portalx.yzu.edu.tw/PortalSocialVB/" + td.a.get("href")[3:])
+        elif i % 7 == 6:
+            data.append(temp)
+            temp = []
+    if show:
+        for i, d in enumerate(data):
+            try:
+                print i, d[0], d[2]
+            except:
+                pass
+    return data
 
-    pass
 if __name__ == "__main__":
     print 'YEE'
     # data = {
