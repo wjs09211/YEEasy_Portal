@@ -3,7 +3,7 @@ import urllib
 import urllib2
 from bs4 import BeautifulSoup
 import argparse
-from Yee import login, get_class
+from Yee import login, get_class, get_class_info, get_class_book
 from Info import cookieHandler
 from Info.UserInfo import UserInfo
 from AutoFillQuestion import AutoFillQuestion
@@ -21,7 +21,6 @@ parser = argparse.ArgumentParser(description='YEE')
 parser.add_argument('-l', '--login', nargs=2)
 parser.add_argument('-ct', '--class_timetable', action='store_true')
 args = parser.parse_args()
-print args.login
 
 if args.login is not None:
     opener = cookieHandler.get_cookie(True)
@@ -42,12 +41,9 @@ else:
 if not check_cookie():
     exit()
 
-time_table, class_table = get_class(opener)
-
-for key, value in class_table.iteritems():
-    if unicode(key).split()[2] == u'影像處理概論':
-        print 1
-    print unicode(key), value
-
+# time_table, class_table = get_class(opener)
+# print class_table
+# get_class_info(opener, "CS362")
+get_class_book(opener, "CS362")
 # AutoFillQuestion(opener, 1)
 

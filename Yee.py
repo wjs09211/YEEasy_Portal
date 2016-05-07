@@ -2,6 +2,7 @@
 import urllib
 import urllib2
 from bs4 import BeautifulSoup
+import json
 
 
 def login(opener, account, password):
@@ -33,8 +34,8 @@ def get_class_table(info):
     info = BeautifulSoup(info, "html.parser")
     table = info.find('table', {'id': 'Table1'})  # 問卷的table
     trs = table.findAll('tr')
-    time_table=[]
-    class_table={}
+    time_table = []
+    class_table = {}
     for tr in trs:
         row = []
         for td in tr:
@@ -74,5 +75,71 @@ def get_class(opener):
     return get_class_table(info)
 
 
+def get_class_info(opener, class_name):
+    _, class_table = get_class(opener)
+    url = ""
+    for key, value in class_table.iteritems():
+        if unicode(key).split()[0] == class_name:
+            url = value
+
+    html = opener.open(url).read()
+    html = BeautifulSoup(html, 'html.parser')
+    tds = html.findAll('td', {'class': 'TDtitle'})
+    for td in tds:
+        try:
+            if td.a.string is not None:
+                print td.a.string
+                infoID = str(td.a.get("href"))
+                start = infoID.find("(") + 1
+                end = infoID.find(",")
+                infoID = infoID[start:end]
+
+                data = {
+                    'ParentPostID': int(infoID),
+                    'pageShow': 0
+                }
+                req = urllib2.Request('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/PostWall.aspx/divParentInnerHtml')
+                req.add_header('Content-Type', 'application/json')
+                response = opener.open(req, json.dumps(data)).read()
+                response = json.loads(response)
+                response = BeautifulSoup(response['d'], "html.parser")
+                div = response.find("div", {"id": "divPostBody"+infoID})
+                if div.string is None:
+                    # 下載項目可能要再做處理
+                    print div.a.text
+                    # print div.a.get("href")
+                else:
+                    print div.text
+                print "#"*50
+                print "#"*50
+        except:
+            pass
+
+
+def get_class_book(opener, class_name):
+    _, class_table = get_class(opener)
+    url = ""
+    for key, value in class_table.iteritems():
+        if unicode(key).split()[0] == class_name:
+            url = value
+    # https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Materials_S
+    opener.open(url)
+    html = opener.open("https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Materials_S").read()
+    html = BeautifulSoup(html, "html.parser")
+
+    tds = html.findAll('td', {"class": ['record2', 'hi_line']})
+
+    for td in tds:
+        print td
+
+    pass
 if __name__ == "__main__":
     print 'YEE'
+    # data = {
+    #     'ids': [12, 3, 4, 5, 6]
+    # }
+    #
+    # req = urllib2.Request('http://example.com/api/posts/create')
+    # req.add_header('Content-Type', 'application/json')
+    #
+    # response = urllib2.urlopen(req, json.dumps(data))
