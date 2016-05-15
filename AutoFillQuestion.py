@@ -5,11 +5,8 @@ from bs4 import BeautifulSoup
 
 question_info = {}
 
-def AutoFillQuestion(opener, value):
-     # 取得使用者帳號ID
-    html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPage.aspx?Menu=Default').read()
-    html = BeautifulSoup(html, "html.parser")
-    account = html.find('div', {'id': 'MainBar_divUserID'}).string
+
+def auto_fill_question(opener, account, value):
 
     opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S5')  # 左邊的選單
     html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/IFrameSub.aspx').read()  # 裡面有session資料
@@ -46,6 +43,7 @@ def get_question_info(html):
 
 def fill_questions(opener, value):
     for class_name, url in question_info.iteritems():
+        print class_name, "填寫完成"
         html = opener.open('https://portal.yzu.edu.tw/NewSurvey/std/' + url).read()  # 到問卷網頁
         html = BeautifulSoup(html, "html.parser")
         data = {}  # post_data

@@ -3,7 +3,7 @@ import urllib
 import urllib2
 from bs4 import BeautifulSoup
 import json
-
+import subprocess
 
 def login(opener, account, password):
     # 登入網址
@@ -51,11 +51,11 @@ def get_class_table(info):
     return schedule_table, class_table
 
 
-def get_class(opener):
+def get_class(opener, account, out_put=False):
     # 取得使用者帳號ID
-    html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPage.aspx?Menu=Default').read()
-    html = BeautifulSoup(html, "html.parser")
-    account = html.find('div', {'id': 'MainBar_divUserID'}).string
+    # html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPage.aspx?Menu=Default').read()
+    # html = BeautifulSoup(html, "html.parser")
+    # account = html.find('div', {'id': 'MainBar_divUserID'}).string
 
     # 模擬點集課表，為了得到session資料
     opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S5')
@@ -75,11 +75,14 @@ def get_class(opener):
 
     info = opener.open(url, data).read()
 
+    if out_put:
+        subprocess.call(["perl", info], shell=True)
+
     return get_class_table(info)
 
 
-def get_class_info(opener, class_name):
-    _, class_table = get_class(opener)
+def get_class_info(opener, account, class_name, count=100):
+    _, class_table = get_class(opener, account)
     url = ""
     for key, value in class_table.iteritems():
         if unicode(key).split()[0] == class_name:
@@ -88,6 +91,10 @@ def get_class_info(opener, class_name):
     html = opener.open(url).read()
     html = BeautifulSoup(html, 'html.parser')
     tds = html.findAll('td', {'class': 'TDtitle'})
+    if count > len(tds):
+        count = len(tds)
+    i = 0
+    print "#"*50 + "\n"
     for td in tds:
         try:
             if td.a.string is not None:
@@ -113,14 +120,16 @@ def get_class_info(opener, class_name):
                     # print div.a.get("href")
                 else:
                     print div.text
-                print "#"*50
-                print "#"*50
+                print "\n" + "#"*50 + "\n"
+                i += 1
+                if i >= count:
+                    break
         except:
             pass
 
 
-def get_class_book(opener, class_name, show=False):
-    _, class_table = get_class(opener)
+def get_class_book(opener, account, class_name, show=False):
+    _, class_table = get_class(opener, account)
     url = ""
     for key, value in class_table.iteritems():
         if unicode(key).split()[0] == class_name:
@@ -128,6 +137,8 @@ def get_class_book(opener, class_name, show=False):
     opener.open(url)
     html = opener.open("https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Materials_S").read()
     # 可給耀文parser
+    f = open("paser.txt", "w")
+    f.write(html)
     html = BeautifulSoup(html, "html.parser")
 
     tds = html.findAll('td', {"class": ['record2', 'hi_line']})
@@ -151,6 +162,13 @@ def get_class_book(opener, class_name, show=False):
             except:
                 pass
     return data
+
+
+def down_load_file(opener, url, file_name):
+    file = opener.open(url).read()
+    f = open(file_name, "wb")
+    f.write(file)
+    f.close()
 
 if __name__ == "__main__":
     print 'YEE'
