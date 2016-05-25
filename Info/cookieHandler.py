@@ -1,7 +1,8 @@
 # encoding=utf8
 import cookielib
 import urllib2
-
+from poster.encode import multipart_encode
+from poster.streaminghttp import register_openers
 cookie = None
 
 
@@ -14,9 +15,7 @@ def get_cookie(new):
     elif not new:
         cookie = cookielib.MozillaCookieJar()
         cookie.load('cookie.txt', ignore_discard=True, ignore_expires=True)
-    # 利用urllib2库的HTTPCookieProcessor对象来创建cookie处理器
-    handler = urllib2.HTTPCookieProcessor(cookie)
-    # 通过handler来构建opener
-    opener = urllib2.build_opener(handler)
-    return opener
 
+    opener = register_openers()
+    opener.add_handler(urllib2.HTTPCookieProcessor(cookie))
+    return opener

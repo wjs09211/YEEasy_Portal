@@ -5,6 +5,16 @@ from bs4 import BeautifulSoup
 import json
 import subprocess
 
+
+from cStringIO import StringIO
+
+def match_class(opener, account, class_name):
+    _, class_table = get_class(opener, account)
+    url = ""
+    for key, value in class_table.iteritems():
+        if unicode(key).split()[0] == class_name:
+            url = value
+    return url
 def login(opener, account, password):
     # 登入網址
     url = 'https://portalx.yzu.edu.tw/PortalSocialVB/Login.aspx'
@@ -76,17 +86,21 @@ def get_class(opener, account, out_put=False):
     info = opener.open(url, data).read()
 
     if out_put:
-        subprocess.call(["perl", info], shell=True)
+        print "Windows not support"
+        # f = open("temp.txt", "w")
+        # f.write(info)
+        # f.close()
+        # subprocess.call("perl perl/curriculum.pl temp.txt", shell=True)
+        # subprocess.call("rm temp.txt", shell=True)
 
     return get_class_table(info)
 
 
 def get_class_info(opener, account, class_name, count=100):
-    _, class_table = get_class(opener, account)
-    url = ""
-    for key, value in class_table.iteritems():
-        if unicode(key).split()[0] == class_name:
-            url = value
+    url = match_class(opener, account, class_name)
+    if url == "":
+        print u"無此課程"
+        return
 
     html = opener.open(url).read()
     html = BeautifulSoup(html, 'html.parser')
@@ -129,16 +143,16 @@ def get_class_info(opener, account, class_name, count=100):
 
 
 def get_class_book(opener, account, class_name, show=False):
-    _, class_table = get_class(opener, account)
-    url = ""
-    for key, value in class_table.iteritems():
-        if unicode(key).split()[0] == class_name:
-            url = value
+    url = match_class(opener, account, class_name)
+    if url == "":
+        print u"無此課程"
+        return
     opener.open(url)
     html = opener.open("https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Materials_S").read()
-    # 可給耀文parser
-    f = open("paser.txt", "w")
-    f.write(html)
+    # linux only
+    # f = open("temp.txt", "w")
+    # f.write(html)
+    # f.close()
     html = BeautifulSoup(html, "html.parser")
 
     tds = html.findAll('td', {"class": ['record2', 'hi_line']})
@@ -158,17 +172,107 @@ def get_class_book(opener, account, class_name, show=False):
     if show:
         for i, d in enumerate(data):
             try:
-                print i, d[0], d[2]
+                print i, d[0], "\t", d[2]
             except:
                 pass
+        # subprocess.call("perl perl/Teaching_material.pl temp.txt", shell=True)
+        # subprocess.call("rm temp.txt", shell=True)
+
     return data
 
 
 def down_load_file(opener, url, file_name):
-    file = opener.open(url).read()
+    if url == "":
+        print "no file"
+        return
+
+    file_data = opener.open(url).read()
     f = open(file_name, "wb")
-    f.write(file)
+    f.write(file_data)
     f.close()
+
+
+def get_homework(opener, account, class_name, show=False):
+    url = match_class(opener, account, class_name)
+    if url == "":
+        print u"無此課程"
+        return
+
+    opener.open(url)
+    html = opener.open("https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Homework_S").read()
+    html = BeautifulSoup(html, "html.parser")
+    trs = html.findAll('tr', {"class": ['hi_line', 'record2']})
+    i = 0
+    data = []
+    temp = []
+    attachement_url = []
+    for tr in trs:
+        if i == 0:
+            tds = tr.findAll('td')
+            j = 0
+            for td in tds:
+                if j == 0 or j == 2 or j == 4 or j == 5 or j == 9 or j == 10:
+                    temp.append(td.text)
+                elif j == 3:
+                    try:
+                        url = "https://portalx.yzu.edu.tw/PortalSocialVB/" + td.a.get("href")[3:]
+                        temp.append(url)
+                        attachement_url.append(url)
+                    except:
+                        temp.append("")
+                        attachement_url.append("")
+                j += 1
+                if j == 11:
+                    j = 0
+            i += 1
+        elif i == 1:
+            td = tr.find('td')
+            description = ""
+            for c in td.contents:
+                if c.string is not None:
+                    description += c.string + "\n"
+            temp.append(description)
+            data.append(temp)
+            temp = []
+            i = 0
+    if show:
+        for d in data:
+            print "NO." + d[0], d[1]
+            print "description:",  d[7],
+            start = d[2].find("File_name=") + len("File_name=")
+            end = d[2].find("&", start)
+            print "Attachement:", d[2][start:end]
+            print "Deadline:", d[3]
+            print "File Uploaded:", d[4]
+            print "Grad:", d[5]
+            print "Comment:", d[6]
+            print "#"*50
+
+    return attachement_url
+
+
+def upload_homework_file(opener, account, class_name, wk_id, file_name):
+    url = match_class(opener, account, class_name)
+    if url == "":
+        print u"無此課程"
+        return
+    opener.open(url)
+    html = opener.open("https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Homework_S").read()
+    html = BeautifulSoup(html, "html.parser")
+
+    from poster.encode import multipart_encode
+    url = "https://portalx.yzu.edu.tw/PortalSocialVB/THom/HomeworkList.aspx?Menu=Hom"
+    datagen, headers = multipart_encode({"FileUpload1": open(file_name, "rb"),
+                                         'name': 'test3.txt',
+                                         "wk_id": str(wk_id),
+                                         "agree": "Upload_File",
+                                         "__EVENTVALIDATION": html.find('input', {'id': '__EVENTVALIDATION'}).get('value'),
+                                         "__VIEWSTATE": html.find('input', {'id': '__VIEWSTATE'}).get('value'),
+                                        "__VIEWSTATEGENERATOR": html.find('input', {'id': '__VIEWSTATEGENERATOR'}).get('value'),
+                                         "txt_Memo": ""})
+
+    request = urllib2.Request(url, datagen, headers)
+    urllib2.urlopen(request)
 
 if __name__ == "__main__":
     print 'YEE'
