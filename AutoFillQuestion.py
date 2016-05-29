@@ -23,7 +23,7 @@ def auto_fill_question(opener, account, value):
     opener.open('https://portal.yzu.edu.tw/NewSurvey/NewLogin.aspx', data)  # 需要post檢查認證
     html = opener.open('https://portal.yzu.edu.tw/NewSurvey/std/F01_Questionnaire.aspx').read()  # 到了問卷頁面
     if html.find("查無待填問卷") != -1:
-        print "查無待填問卷"
+        print u"查無待填問卷"
         return
     # 取得問卷網址
     get_question_info(html)
@@ -43,7 +43,7 @@ def get_question_info(html):
 
 def fill_questions(opener, value):
     for class_name, url in question_info.iteritems():
-        print class_name, "填寫完成"
+        print class_name, u"填寫完成"
         html = opener.open('https://portal.yzu.edu.tw/NewSurvey/std/' + url).read()  # 到問卷網頁
         html = BeautifulSoup(html, "html.parser")
         data = {}  # post_data
@@ -60,4 +60,4 @@ def fill_questions(opener, value):
 
         data = urllib.urlencode(data)  # 編碼
         opener.open('https://portal.yzu.edu.tw/NewSurvey/std/' + url, data)  # 送資料
-    print "完成"
+    print u"完成"

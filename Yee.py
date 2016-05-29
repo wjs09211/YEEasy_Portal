@@ -1,12 +1,23 @@
-# encoding=utf8
+# -*- coding: utf-8 -*-
 import urllib
 import urllib2
 from bs4 import BeautifulSoup
 import json
 import subprocess
-
+import datetime
+import os
+from threading import Thread
 
 from cStringIO import StringIO
+from WindowFileParser import txt_parser, ppt_parser, docx_parser
+
+
+def unquote_u(source):
+    result = urllib.unquote(source)
+    if '%u' in result:
+        result = result.replace('%u','\\u').decode('unicode_escape')
+    return result
+
 
 def match_class(opener, account, class_name):
     _, class_table = get_class(opener, account)
@@ -15,6 +26,8 @@ def match_class(opener, account, class_name):
         if unicode(key).split()[0] == class_name:
             url = value
     return url
+
+
 def login(opener, account, password):
     # 登入網址
     url = 'https://portalx.yzu.edu.tw/PortalSocialVB/Login.aspx'
@@ -41,6 +54,23 @@ def login(opener, account, password):
             return "login fail"
     except:
         return "something error"
+
+
+def check_work(opener, account):
+    html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPage.aspx?Menu=Default').read()
+    data = {'RequestType': "loadMyScheduleDataTable",
+            'TheDay': "2016/05/26",
+            'UserAccount': account}
+    req = urllib2.Request('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPageRequest.ashx')
+    req.add_header('Content-Type', 'application/json')
+    response = opener.open(req, json.dumps(data)).read()
+    response = json.loads(response)
+    for r in response:
+        if r["Title"].find(u"【作業】") != -1:
+            end = int(r["EndDate"][6:-2])
+            print r["Title"] + "  ", u"剩餘：",
+            print (datetime.date.fromtimestamp(end/1000) - datetime.date.today()).days, u"天"
+            # print r["URL"]
 
 
 def get_class_table(info):
@@ -142,7 +172,7 @@ def get_class_info(opener, account, class_name, count=100):
             pass
 
 
-def get_class_book(opener, account, class_name, show=False):
+def get_teach_material(opener, account, class_name, show=False):
     url = match_class(opener, account, class_name)
     if url == "":
         print u"無此課程"
@@ -161,18 +191,20 @@ def get_class_book(opener, account, class_name, show=False):
     temp = []
     for i, td in enumerate(tds):
         if i % 7 == 0:
-            temp.append(td.text[1:-1])
+            temp.append(td.text)
         if i % 7 == 4:
-            temp.append(td.text[3:-1])
+            temp.append(td.text)
         elif i % 7 == 1:
             temp.append("https://portalx.yzu.edu.tw/PortalSocialVB/" + td.a.get("href")[3:])
         elif i % 7 == 6:
             data.append(temp)
             temp = []
+
     if show:
         for i, d in enumerate(data):
             try:
-                print i, d[0], "\t", d[2]
+                print str(i + 1) + ".", d[0], "\t", d[2]
+                print
             except:
                 pass
         # subprocess.call("perl perl/Teaching_material.pl temp.txt", shell=True)
@@ -181,15 +213,19 @@ def get_class_book(opener, account, class_name, show=False):
     return data
 
 
-def down_load_file(opener, url, file_name):
+def down_load_file(opener, url, file_name, path="", show=False):
     if url == "":
         print "no file"
         return
-
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    file_name = unquote_u(file_name)
     file_data = opener.open(url).read()
-    f = open(file_name, "wb")
+    f = open(path + file_name, "wb")
     f.write(file_data)
     f.close()
+    if show:
+        print file_name, u"\t\tdownload finish"
 
 
 def get_homework(opener, account, class_name, show=False):
@@ -274,13 +310,32 @@ def upload_homework_file(opener, account, class_name, wk_id, file_name):
     request = urllib2.Request(url, datagen, headers)
     urllib2.urlopen(request)
 
+
+def find_key_word(opener, account, class_name, key):
+    teach_material = get_teach_material(opener, account, class_name, show=False)
+    if teach_material is None:
+        return False
+    if not os.path.isdir("material"):
+        os.mkdir("material")
+    path = "material/" + class_name + "/"
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    print 'down load file, please wait...'
+    for ts in teach_material:
+        url = ts[1]
+        start = url.find("File_name=") + len("File_name=")
+        end = url.find("&", start)
+        file_name = unquote_u(url[start:end])
+        if not os.path.isfile(path + file_name):
+            down_load_file(opener, url, file_name, path)
+
+        # if file_name.endswith('txt'):
+        #     txt_parser(path + file_name, key)
+        # elif file_name.endswith('ppt') or file_name.endswith('pptx'):
+        #     ppt_parser(path + file_name, key)
+        # elif file_name.endswith('docx'):
+        #     docx_parser(path + file_name, key)
+    docx_parser("test", key)
+
 if __name__ == "__main__":
     print 'YEE'
-    # data = {
-    #     'ids': [12, 3, 4, 5, 6]
-    # }
-    #
-    # req = urllib2.Request('http://example.com/api/posts/create')
-    # req.add_header('Content-Type', 'application/json')
-    #
-    # response = urllib2.urlopen(req, json.dumps(data))
