@@ -4,7 +4,8 @@ import urllib2
 from bs4 import BeautifulSoup
 import argparse
 from Yee import login, get_class, get_class_info, get_teach_material, \
-    down_load_file, get_homework, upload_homework_file, check_work, find_key_word
+    down_load_file, get_homework, upload_homework_file, check_work, find_key_word, get_score, \
+    get_current_semester, check_midtern_d, get_avg_score, get_range_score
 from Info import cookieHandler
 from Info.UserInfo import UserInfo
 from AutoFillQuestion import auto_fill_question
@@ -33,6 +34,8 @@ parser.add_argument('-t', '--teach_material', nargs="+")
 parser.add_argument('-hw', '--homework', nargs="+")
 parser.add_argument('-a', '--auto', type=int)
 parser.add_argument('-f', '--find', nargs=2)
+parser.add_argument('-avg', '--average', nargs='*')
+parser.add_argument('-g', '--grade', nargs='*')
 args = parser.parse_args()
 
 # region login
@@ -50,6 +53,7 @@ if args.login:
     else:
         cookieHandler.cookie.save(ignore_discard=True, ignore_expires=True)
         check_work(opener, account)
+        check_midtern_d(opener, account)
     exit()
 else:
     try:
@@ -139,4 +143,42 @@ elif args.auto is not None:
 elif args.find is not None:
     find_key_word(opener, account, args.find[0], args.find[1])
 # endregion
+# region -g
+elif args.grade is not None:
+    if args.average is not None:
+        if len(args.average) == 0:
+            grade = get_avg_score(opener, account)
+            print u"學期總平均為: " + str(grade)
+        elif len(args.average) == 1:
+            try:
+                grade = get_avg_score(opener, account, [args.average[0]])
+                print u"第" + args.average[0][0:-2] + u"年 第" + args.average[0][-1:] + u"學期 平均為:" + str(grade)
+            except:
+                print u"輸入錯誤"
+        else:
+            print u"輸入錯誤"
+    else:
+        if len(args.grade) >= 1:
+            number = 0
+            try:
+                number = int(args.grade[0])
+            except:
+                print 'first argument to "{' + args.grade[0] + '}" requires an integer'
+                exit()
+            if len(args.grade) == 1:
+                get_range_score(opener, account, number)
+            else:
+                if args.grade[1] == u'up':
+                    get_range_score(opener, account, number, True)
+                elif args.grade[1] == u'down':
+                    get_range_score(opener, account, number, False)
+                else:
+                    print 'second argument need \"up\" or \"down\"'
+# endregion
 
+# find_key_word(opener, account,"CS377", "test")
+# datas = get_score(opener, account, ['104/1'])
+# check_midtern_d(opener, account)
+# get_avg_score(opener, account, ['102/2'])
+# print get_current_semester()
+# get_range_score(opener, account, 90)

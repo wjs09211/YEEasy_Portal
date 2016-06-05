@@ -6,10 +6,49 @@ import json
 import subprocess
 import datetime
 import os
-from threading import Thread
-
 from cStringIO import StringIO
-from WindowFileParser import txt_parser, ppt_parser, docx_parser
+
+from WindowFileParser import txt_parser, pptx_parser, docx_parser, pdf_parser
+from Info.TextColors import Color
+
+
+def get_current_semester():
+    semester = ""
+    date_now = datetime.datetime.now()
+    if 2 <= date_now.month <= 8:
+        semester = str(date_now.year - 1912) + "/2"
+    else:
+        if date_now.month <= 1:
+            semester = str(date_now.year - 1912) + "/1"
+        else:
+            semester = str(date_now.year - 1912 + 1) + "/1"
+    return semester
+
+
+def get_all_semester(opener, account):
+    # 模擬點集課表，為了得到session資料
+    opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S6').read()
+    # 裡面有session資料
+    html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/IFrameSub.aspx').read()
+    html = BeautifulSoup(html, "html.parser")
+
+    # 取得 sessionID
+    sessionID = html.find('input', {'id': 'SessionID'}).get('value')
+    LangVersion = html.find('input', {'id': 'LangVersion'}).get('value')
+    UseType = html.find('input', {'id': 'UseType'}).get('value')
+    url = 'https://portal.yzu.edu.tw/VC2/FFB_Login.aspx?sys=STD_Score'  # 需要post檢查認證
+
+    data = {'Account': account, 'SessionID': sessionID,
+            'LangVersion': LangVersion, 'UseType': UseType}
+    data = urllib.urlencode(data)
+    # 到達成績頁面
+    html = opener.open(url, data).read()
+    html = BeautifulSoup(html, "html.parser")
+    options = html.findAll('option')
+    semesters = []
+    for option in options:
+        semesters.append(option.get('value'))
+    return semesters
 
 
 def unquote_u(source):
@@ -73,6 +112,15 @@ def check_work(opener, account):
             # print r["URL"]
 
 
+def check_midtern_d(opener, account):
+    scores = get_score(opener, account, [get_current_semester()])
+    count = 0
+    for score in scores:
+        if score['midtern'] == u'D':
+            count += 1
+    print u'期中評價為D的科目有 ' + Color.RED + str(count) + Color.ENDC + u' 個'
+
+
 def get_class_table(info):
     info = BeautifulSoup(info, "html.parser")
     table = info.find('table', {'id': 'Table1'})  # 問卷的table
@@ -91,12 +139,7 @@ def get_class_table(info):
     return schedule_table, class_table
 
 
-def get_class(opener, account, out_put=False):
-    # 取得使用者帳號ID
-    # html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/DefaultPage.aspx?Menu=Default').read()
-    # html = BeautifulSoup(html, "html.parser")
-    # account = html.find('div', {'id': 'MainBar_divUserID'}).string
-
+def get_class(opener, account, show=False):
     # 模擬點集課表，為了得到session資料
     opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S5')
     # 裡面有session資料
@@ -115,7 +158,7 @@ def get_class(opener, account, out_put=False):
 
     info = opener.open(url, data).read()
 
-    if out_put:
+    if show:
         print "Windows not support"
         # f = open("temp.txt", "w")
         # f.write(info)
@@ -321,6 +364,7 @@ def find_key_word(opener, account, class_name, key):
     if not os.path.isdir(path):
         os.mkdir(path)
     print 'down load file, please wait...'
+    file_count = 0
     for ts in teach_material:
         url = ts[1]
         start = url.find("File_name=") + len("File_name=")
@@ -329,13 +373,107 @@ def find_key_word(opener, account, class_name, key):
         if not os.path.isfile(path + file_name):
             down_load_file(opener, url, file_name, path)
 
-        # if file_name.endswith('txt'):
-        #     txt_parser(path + file_name, key)
-        # elif file_name.endswith('ppt') or file_name.endswith('pptx'):
-        #     ppt_parser(path + file_name, key)
-        # elif file_name.endswith('docx'):
-        #     docx_parser(path + file_name, key)
-    docx_parser("test", key)
+        if file_name.endswith('txt'):
+            if txt_parser(path + file_name, key):
+                file_count += 1
+        elif file_name.endswith('pptx'):
+            if pptx_parser(path + file_name, key):
+                file_count += 1
+        elif file_name.endswith('docx'):
+            if docx_parser(path + file_name, key):
+                file_count += 1
+        elif file_name.endswith('pdf'):
+            if pdf_parser(path + file_name, key):
+                file_count += 1
+
+    print u"共有", file_count, u"個檔案含有:", Color.RED + key
+
+
+def get_score(opener, account, semesters=None):
+    if semesters is None:
+        semesters = [get_current_semester()]
+    # 模擬點集課表，為了得到session資料
+    opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=App_&SysCode=S6').read()
+    # 裡面有session資料
+    html = opener.open('https://portalx.yzu.edu.tw/PortalSocialVB/IFrameSub.aspx').read()
+    html = BeautifulSoup(html, "html.parser")
+
+    # 取得 sessionID
+    sessionID = html.find('input', {'id': 'SessionID'}).get('value')
+    LangVersion = html.find('input', {'id': 'LangVersion'}).get('value')
+    UseType = html.find('input', {'id': 'UseType'}).get('value')
+    url = 'https://portal.yzu.edu.tw/VC2/FFB_Login.aspx?sys=STD_Score'  # 需要post檢查認證
+
+    data = {'Account': account, 'SessionID': sessionID,
+            'LangVersion': LangVersion, 'UseType': UseType}
+    data = urllib.urlencode(data)
+    # 到達成績頁面
+    html = opener.open(url, data).read()
+    html = BeautifulSoup(html, "html.parser")
+
+    datas = []
+    # 前往指定的學期
+    for semester in semesters:
+        url = 'https://portal.yzu.edu.tw/VC2/Student/console/My_Stdregi_Score.aspx'
+        data = {}
+        data['__EVENTTARGET'] = 'DropDownList2'
+        data['__EVENTVALIDATION'] = html.find('input', {'id': '__EVENTVALIDATION'}).get('value')
+        data['__VIEWSTATE'] = html.find('input', {'id': '__VIEWSTATE'}).get('value')
+        data['DropDownList2'] = semester
+        data = urllib.urlencode(data)
+        html = opener.open(url, data).read()
+        html = BeautifulSoup(html, "html.parser")
+
+        table = html.find('table', {'id': 'Table1'})
+        trs = table.findAll('tr', {'class': ['hi_line', 'record2']})
+        for tr in trs:
+            tds = tr.findAll('td')
+            data = {}
+            for i, td in enumerate(tds):
+                if i % 8 == 4:
+                    data['name'] = td.text
+                elif i % 8 == 5:
+                    data['midtern'] = td.text
+                elif i % 8 == 6:
+                    if td.text != '':
+                        data['credit'] = int(td.text)
+                    else:
+                        data['credit'] = ''
+                elif i % 8 == 7:
+                    if td.text != '' and td.text != 'P':
+                        data['grade'] = int(td.text)
+                    else:
+                        data['grade'] = ''
+                    datas.append(data)
+    return datas
+
+
+def get_avg_score(opener, account, semester=None):
+    if semester is None:
+        semesters = get_all_semester(opener, account)
+        datas = get_score(opener, account, semesters)
+    else:
+        datas = get_score(opener, account, semester)
+
+    grade_sum = 0
+    credit_sum = 0
+    for data in datas:
+        if data['grade'] != '' and data['credit'] != '':
+            grade_sum += data['grade'] * data['credit']
+            credit_sum += data['credit']
+    return float(grade_sum) / credit_sum
+
+
+def get_range_score(opener, account, value, up=True):
+    semesters = get_all_semester(opener, account)
+    datas = get_score(opener, account, semesters)
+    for data in datas:
+        if data['grade'] != '':
+            if up and data['grade'] >= value:
+                print data['name'], Color.RED + unicode(data['grade']) + Color.ENDC
+            elif not up and data['grade'] <= value:
+                print data['name'],
+                print Color.RED + unicode(data['grade']) + Color.ENDC
 
 if __name__ == "__main__":
-    print 'YEE'
+    print get_current_semester()

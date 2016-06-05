@@ -5,27 +5,62 @@ import urllib
 import chardet
 import os
 from docx import Document
+import PyPDF2
 
 
-def docx_parser(file_path, key):
+def get_unicode(key):
     encode = chardet.detect(key)['encoding']
     if encode == 'windows-1252':
         encode = 'Big5'
-    key = unicode(key, encode)
-    document = Document(file_path)
-    lines = []
-    for i, para in enumerate(document.paragraphs):
-        if key in para.text:
-            lines.append(i + 1)
-    print lines
+    return unicode(key, encode)
 
-def ppt_parser(file_path, key):
+
+def pdf_parser(file_path, key):
     try:
-        encode = chardet.detect(key)['encoding']
-        if encode == 'windows-1252':
-            encode = 'Big5'
-        key = unicode(key, encode)
+        key = get_unicode(key)
+        pdf_file = open(file_path, 'rb')
+        pdf_reader = PyPDF2.PdfFileReader(pdf_file)
 
+        lines = []
+        for i in range(pdf_reader.numPages):
+            page = pdf_reader.getPage(i)
+            if key in page.extractText():
+                lines.append(i + 1)
+
+        if len(lines) != 0:
+            print "filename:", os.path.basename(file_path)
+            print "in page:", lines
+            print
+            return True
+        else:
+            return False
+    except:
+        print u'encode pdf error'
+
+
+def docx_parser(file_path, key):
+    try:
+        key = get_unicode(key)
+        document = Document(file_path)
+        lines = []
+        for i, para in enumerate(document.paragraphs):
+            if key in para.text:
+                lines.append(i + 1)
+
+        if len(lines) != 0:
+            print "filename:", os.path.basename(file_path)
+            print "in Line:", lines
+            print
+            return True
+        else:
+            return False
+    except:
+        print u'encode docx error'
+
+
+def pptx_parser(file_path, key):
+    try:
+        key = get_unicode(key)
         prs = Presentation(file_path)
         lines = []
 
@@ -45,16 +80,12 @@ def ppt_parser(file_path, key):
         else:
             return False
     except:
-        print u'encode something error'
+        print u'encode pptx error'
 
 
 def txt_parser(file_path, key):
     try:
-        encode = chardet.detect(key)['encoding']
-        if encode == 'windows-1252':
-            encode = 'Big5'
-        key = unicode(key, encode)
-
+        key = get_unicode(key)
         with open(file_path, 'rb') as f:
             content = f.read()
         content = content.decode(chardet.detect(content)['encoding'], 'ignore')
@@ -65,14 +96,13 @@ def txt_parser(file_path, key):
                 lines.append(i + 1)
         if len(lines) != 0:
             print "filename:", os.path.basename(file_path)
-            print "key world:", key
             print "in Line:", lines
             print
             return True
         else:
             return False
     except:
-        print u"encode something error"
+        print u"encode txt error"
 
 
 if __name__ == "__main__":
