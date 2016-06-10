@@ -129,8 +129,10 @@ def get_class_table(info):
     class_table = {}
     for tr in trs:
         row = []
-        for td in tr:
-            row.append(td.string)
+        # 小心這裡
+        tds = tr.findAll('td')
+        for td in tds:
+            row.append(td.text)
             try:
                 class_table[td.a.string] = td.a.get("href")
             except:
@@ -159,12 +161,11 @@ def get_class(opener, account, show=False):
     info = opener.open(url, data).read()
 
     if show:
-        print "Windows not support"
-        # f = open("temp.txt", "w")
-        # f.write(info)
-        # f.close()
-        # subprocess.call("perl perl/curriculum.pl temp.txt", shell=True)
-        # subprocess.call("rm temp.txt", shell=True)
+        f = open("temp.txt", "w")
+        f.write(info)
+        f.close()
+        subprocess.call("perl perl/curriculum.pl temp.txt", shell=True)
+        subprocess.call("rm temp.txt", shell=True)
 
     return get_class_table(info)
 
@@ -181,11 +182,11 @@ def get_class_info(opener, account, class_name, count=100):
     if count > len(tds):
         count = len(tds)
     i = 0
-    print "#"*50 + "\n"
+
     for td in tds:
         try:
             if td.a.string is not None:
-                print td.a.string
+                print Color.BLUE + td.a.string + Color.ENDC
                 infoID = str(td.a.get("href"))
                 start = infoID.find("(") + 1
                 end = infoID.find(",")
@@ -207,7 +208,7 @@ def get_class_info(opener, account, class_name, count=100):
                     # print div.a.get("href")
                 else:
                     print div.text
-                print "\n" + "#"*50 + "\n"
+                print "\n"
                 i += 1
                 if i >= count:
                     break
@@ -260,8 +261,9 @@ def down_load_file(opener, url, file_name, path="", show=False):
     if url == "":
         print "no file"
         return
-    if not os.path.isdir(path):
-        os.mkdir(path)
+    if path != "":
+        if not os.path.isdir(path):
+            os.mkdir(path)
     file_name = unquote_u(file_name)
     file_data = opener.open(url).read()
     f = open(path + file_name, "wb")

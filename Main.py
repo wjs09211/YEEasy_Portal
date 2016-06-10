@@ -2,14 +2,16 @@
 import urllib
 import urllib2
 from bs4 import BeautifulSoup
-import argparse
+
 from Yee import login, get_class, get_class_info, get_teach_material, \
     down_load_file, get_homework, upload_homework_file, check_work, find_key_word, get_score, \
     get_current_semester, check_midtern_d, get_avg_score, get_range_score
 from Info import cookieHandler
-from Info.UserInfo import UserInfo
+from Info.Args import args
 from AutoFillQuestion import auto_fill_question
-
+from GoogleCalendar import calendar_insert
+from datetime import datetime, timedelta
+import os
 account = ""
 
 
@@ -24,19 +26,6 @@ def check_cookie():
         account = html.find('div', {'id': 'MainBar_divUserID'}).string
         return True
 
-
-parser = argparse.ArgumentParser(description='YEE')
-parser.add_argument('-l', '--login', action='store_true', help='login')
-parser.add_argument('-c', '--classs', action='store_true')
-parser.add_argument('-cs', '--class_schedule', action='store_true')
-parser.add_argument('-i', '--class_info', nargs="+")
-parser.add_argument('-t', '--teach_material', nargs="+")
-parser.add_argument('-hw', '--homework', nargs="+")
-parser.add_argument('-a', '--auto', type=int)
-parser.add_argument('-f', '--find', nargs=2)
-parser.add_argument('-avg', '--average', nargs='*')
-parser.add_argument('-g', '--grade', nargs='*')
-args = parser.parse_args()
 
 # region login
 if args.login:
@@ -89,7 +78,7 @@ elif args.class_info is not None:
             exit()
         get_class_info(opener, account, args.class_info[0], number)
 # endregion
-# region-t number
+# region-t className number
 elif args.teach_material is not None:
     # 看教材
     if len(args.teach_material) == 1:
@@ -102,11 +91,13 @@ elif args.teach_material is not None:
         except:
             print 'second argument to "{' + args.teach_material[1] + '}" requires an integer'
             exit()
+        if not os.path.isdir("material"):
+            os.mkdir("material")
         data = get_teach_material(opener, account, args.teach_material[0], False)
         url = data[number - 1][1]
         start = url.find("File_name=") + len("File_name=")
         end = url.find("&", start)
-        down_load_file(opener, url, url[start:end], show=True)
+        down_load_file(opener, url, url[start:end], 'material/' + args.teach_material[0] + '/',  show=True)
 # endregion
 # region-hw classname number file_name
 elif args.homework is not None:
@@ -142,6 +133,12 @@ elif args.auto is not None:
 # region -f
 elif args.find is not None:
     find_key_word(opener, account, args.find[0], args.find[1])
+# endregion
+# region -goo
+elif args.google_calendar:
+    print 1
+    schedule_table, class_table = get_class(opener, account)
+    calendar_insert(schedule_table)
 # endregion
 # region -g
 elif args.grade is not None:
@@ -182,3 +179,4 @@ elif args.grade is not None:
 # get_avg_score(opener, account, ['102/2'])
 # print get_current_semester()
 # get_range_score(opener, account, 90)
+

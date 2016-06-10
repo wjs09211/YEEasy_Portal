@@ -1,5 +1,6 @@
 class Color:
     RED = '\033[0;31m'
+    BLUE = '\033[0;34m'
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
