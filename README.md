@@ -74,7 +74,7 @@ yee -goo
 **yee -g** Show your grade.
 ```
 yee -g -avg # Show your total average
-yee -g -avg 102 # Show your semester average
+yee -g -avg 102/2 # Show your semester average
 yee -g 60 down # Show class grage which below 60 (fail)
 yee -g 90 up # Show class grage which above 90
 ```
