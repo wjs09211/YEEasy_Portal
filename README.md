@@ -21,23 +21,61 @@ alias yee="python Main.py" # can easy to use
 
 ## How To Use?
 
-*yee --login* can login the yzu portal
+**yee -l** login the yzu portal
 ```
 yee -l
 yee --login
 ``` 
-*yee --class* can look what class you study this semester
+**yee -c** look what class you study this semester
 ```
 yee -c
 yee --class
 ```
-*yee -cs* can look your school timetable
+**yee -cs** look your school timetable
 ```
 yee -cs
 yee --class_schedule
 ```
-*yee -i "classname" "number"* print class infomation.
+**yee -i "classname" "number"** print class infomation.
 ```
 yee -i CS312 # print all infomation
 yee -i CS312 5 # print only 5 infomation
 ```
+**yee -t "classname" "number"** look and download your class teach material.
+```
+yee -t CS312
+yee -t CS312 1 # download first teach material
+```
+**yee -hw "classname" "number" "file_name" look and download or upload homework.
+
+One argument look homework infomation. 
+
+Two argument download homework attachment. 
+
+Three argument upload your homework file. 
+```
+yee -hw CS312
+yee -hw CS312 1
+yee -hw CS312 homework.txt
+```
+**yee -a "value"** Auto fill class question. Value has 1~5. 1 is very good. 2 is good. 3 is normal. 4 is bad. 5 is very bad.
+```
+yee -a 1
+yee -a 2
+``` 
+**yee -f "classname" "keyword" Find keyword appear in teach material. Can tell you keyword appear in witch file. And where in file.
+```
+yee -f CS312 "process"
+```
+**yee -goo** Import your school timetable to Google Calendar.
+```
+yee -goo
+```
+**yee -g** Show your grade.
+```
+yee -g -avg # Show your total average
+yee -g -avg 102 # Show your semester average
+yee -g 60 down # Show class grage which below 60 (fail)
+yee -g 90 up # Show class grage which above 90
+```
+

@@ -11,11 +11,11 @@ parser = argparse.ArgumentParser(parents=[tools.argparser], formatter_class=argp
                                  '''))
 
 parser.add_argument('-l', '--login', action='store_true', help='login the yzu portal, need use this first')
-parser.add_argument('-c', '--classs', action='store_true', help='can look what class you study this semester')
-parser.add_argument('-cs', '--class_schedule', action='store_true', help='can look your school timetable')
-parser.add_argument('-i', '--class_info', nargs="+", help='can look your class info')
-parser.add_argument('-t', '--teach_material', nargs="+", help='can look and download your class teach material')
-parser.add_argument('-hw', '--homework', nargs="+", help='can look and download and upload your class homework')
+parser.add_argument('-c', '--classs', action='store_true', help='look what class you study this semester')
+parser.add_argument('-cs', '--class_schedule', action='store_true', help='look your school timetable')
+parser.add_argument('-i', '--class_info', nargs="+", help='look your class info')
+parser.add_argument('-t', '--teach_material', nargs="+", help='look and download your class teach material')
+parser.add_argument('-hw', '--homework', nargs="+", help='look and download and upload your class homework')
 parser.add_argument('-a', '--auto', type=int, help='auto fill yzu question')
 parser.add_argument('-f', '--find', nargs=2,
                     help='find keyword in all teach material, only support these file type: doc, docx, pptx, pdf, txt')
