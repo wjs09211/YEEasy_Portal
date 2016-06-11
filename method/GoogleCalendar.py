@@ -14,7 +14,7 @@ flags = args
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/calendar-python-quickstart.json
 SCOPES = 'https://www.googleapis.com/auth/calendar'
-CLIENT_SECRET_FILE = 'client_secret.json'
+CLIENT_SECRET_FILE = 'method/client_secret.json'
 APPLICATION_NAME = 'Google Calendar'
 
 
@@ -56,6 +56,15 @@ def calendar_insert(schedule_table):
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
+    date_now = datetime.now()
+    if 2 <= date_now.month <= 7:
+        until = str(date_now.year) + "0701"
+    else:
+        if date_now.month <= 1:
+            until = str(date_now.year) + "0201"
+        else:
+            until = str(date_now.year + 1) + "0201"
+
     weeks = {}
     for i in range(7):
         date_now = datetime.now() + timedelta(days=i)
@@ -83,7 +92,7 @@ def calendar_insert(schedule_table):
                         'timeZone': 'America/Los_Angeles',
                     },
                     'recurrence': [
-                        'RRULE:FREQ=WEEKLY;COUNT=2'
+                        'RRULE:FREQ=WEEKLY;UNTIL=' + until
                     ],
                     'reminders': {
                         'useDefault': False,

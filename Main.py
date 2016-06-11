@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-import urllib
-import urllib2
+import os
+
 from bs4 import BeautifulSoup
 
-from Yee import login, get_class, get_class_info, get_teach_material, \
-    down_load_file, get_homework, upload_homework_file, check_work, find_key_word, get_score, \
-    get_current_semester, check_midtern_d, get_avg_score, get_range_score
 from Info import cookieHandler
 from Info.Args import args
-from AutoFillQuestion import auto_fill_question
-from GoogleCalendar import calendar_insert
-from datetime import datetime, timedelta
-import os
+from method.AutoFillQuestion import auto_fill_question
+from method.GoogleCalendar import calendar_insert
+from method.Yee import login, get_class, get_class_info, get_teach_material, \
+    down_load_file, get_homework, upload_homework_file, check_work, find_key_word, check_midtern_d, get_avg_score, get_range_score
+
+import warnings
+warnings.filterwarnings("ignore")
+
 account = ""
 
 
@@ -110,11 +111,13 @@ elif args.homework is not None:
         except:
             print 'second argument to "{' + args.homework[1] + '}" requires an integer'
             exit()
+        if not os.path.isdir("homework"):
+            os.mkdir("homework")
         data = get_homework(opener, account, args.homework[0], False)
         url = data[number]
         start = url.find("File_name=") + len("File_name=")
         end = url.find("&", start)
-        down_load_file(opener, url, url[start:end], show=True)
+        down_load_file(opener, url, url[start:end], 'homework/' + args.homework[0] + '/', show=True)
     elif len(args.homework) == 3:
         number = 0
         try:
@@ -136,7 +139,6 @@ elif args.find is not None:
 # endregion
 # region -goo
 elif args.google_calendar:
-    print 1
     schedule_table, class_table = get_class(opener, account)
     calendar_insert(schedule_table)
 # endregion

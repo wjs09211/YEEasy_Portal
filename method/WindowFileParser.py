@@ -6,6 +6,8 @@ import chardet
 import os
 from docx import Document
 import PyPDF2
+import subprocess
+from Info.TextColors import Color
 
 
 def get_unicode(key):
@@ -28,8 +30,8 @@ def pdf_parser(file_path, key):
                 lines.append(i + 1)
 
         if len(lines) != 0:
-            print "filename:", os.path.basename(file_path)
-            print "in page:", lines
+            print Color.BLUE + "filename:" + Color.ENDC, os.path.basename(file_path)
+            print Color.BLUE + "in page:" + Color.ENDC, lines
             print
             return True
         else:
@@ -37,6 +39,23 @@ def pdf_parser(file_path, key):
     except:
         print u'encode pdf error'
 
+
+def doc_parser(file_path, key):
+    try:
+        key = get_unicode(key)
+        p = subprocess.Popen("antiword \"" + file_path + "\" | grep -in " + key + " | awk -F: \'{print $1}\'", stdout=subprocess.PIPE, shell=True)
+        (output, err) = p.communicate()
+        lines = output.split('\n')[:-1]
+
+        if len(lines) != 0:
+            print Color.BLUE + "filename:" + Color.ENDC, os.path.basename(file_path)
+            print Color.BLUE + "in Line:" + Color.ENDC, lines
+            print
+            return True
+        else:
+            return False
+    except:
+        print u'encode doc error'
 
 def docx_parser(file_path, key):
     try:
@@ -48,8 +67,8 @@ def docx_parser(file_path, key):
                 lines.append(i + 1)
 
         if len(lines) != 0:
-            print "filename:", os.path.basename(file_path)
-            print "in Line:", lines
+            print Color.BLUE + "filename:" + Color.ENDC, os.path.basename(file_path)
+            print Color.BLUE + "in Line:" + Color.ENDC, lines
             print
             return True
         else:
@@ -73,8 +92,8 @@ def pptx_parser(file_path, key):
                                 if i not in lines:
                                     lines.append(i)
         if len(lines) != 0:
-            print "file_name:", os.path.basename(file_path)
-            print "in slide:", lines
+            print Color.BLUE + "filename:" + Color.ENDC, os.path.basename(file_path)
+            print Color.BLUE + "in slide:" + Color.ENDC, lines
             print
             return True
         else:
@@ -95,8 +114,8 @@ def txt_parser(file_path, key):
             if key in line:
                 lines.append(i + 1)
         if len(lines) != 0:
-            print "filename:", os.path.basename(file_path)
-            print "in Line:", lines
+            print Color.BLUE + "filename:" + Color.ENDC, os.path.basename(file_path)
+            print Color.BLUE + "in Line:" + Color.ENDC, lines
             print
             return True
         else:

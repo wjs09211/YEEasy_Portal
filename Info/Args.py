@@ -4,6 +4,7 @@ from oauth2client import tools
 parser = argparse.ArgumentParser(parents=[tools.argparser],
                                  description="YEEasy Portal linux command line operate yzu portal")
 
+# choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 parser.add_argument('-l', '--login', action='store_true', help='login')
 parser.add_argument('-c', '--classs', action='store_true')
 parser.add_argument('-cs', '--class_schedule', action='store_true')

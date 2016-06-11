@@ -8,14 +8,14 @@ import datetime
 import os
 from cStringIO import StringIO
 
-from WindowFileParser import txt_parser, pptx_parser, docx_parser, pdf_parser
+from WindowFileParser import txt_parser, pptx_parser, docx_parser, pdf_parser, doc_parser
 from Info.TextColors import Color
 
 
 def get_current_semester():
     semester = ""
     date_now = datetime.datetime.now()
-    if 2 <= date_now.month <= 8:
+    if 2 <= date_now.month <= 7:
         semester = str(date_now.year - 1912) + "/2"
     else:
         if date_now.month <= 1:
@@ -108,7 +108,9 @@ def check_work(opener, account):
         if r["Title"].find(u"【作業】") != -1:
             end = int(r["EndDate"][6:-2])
             print r["Title"] + "  ", u"剩餘：",
-            print (datetime.date.fromtimestamp(end/1000) - datetime.date.today()).days, u"天"
+            day = (datetime.date.fromtimestamp(end/1000) - datetime.date.today()).days
+            print day, u"天"
+            subprocess.call("bash perl/mail.sh " + r["Title"] + " " + str(day) + " " + account + "@mail.yzu.edu.tw", shell=True)
             # print r["URL"]
 
 
@@ -223,10 +225,11 @@ def get_teach_material(opener, account, class_name, show=False):
         return
     opener.open(url)
     html = opener.open("https://portalx.yzu.edu.tw/PortalSocialVB/FMain/ClickMenuLog.aspx?type=Pag_Materials_S").read()
-    # linux only
-    # f = open("temp.txt", "w")
-    # f.write(html)
-    # f.close()
+    # region linux only
+    f = open("temp.txt", "w")
+    f.write(html)
+    f.close()
+    # endregion
     html = BeautifulSoup(html, "html.parser")
 
     tds = html.findAll('td', {"class": ['record2', 'hi_line']})
@@ -245,14 +248,14 @@ def get_teach_material(opener, account, class_name, show=False):
             temp = []
 
     if show:
-        for i, d in enumerate(data):
-            try:
-                print str(i + 1) + ".", d[0], "\t", d[2]
-                print
-            except:
-                pass
-        # subprocess.call("perl perl/Teaching_material.pl temp.txt", shell=True)
-        # subprocess.call("rm temp.txt", shell=True)
+        # for i, d in enumerate(data):
+        #     try:
+        #         print str(i + 1) + ".", d[0], "\t", d[2]
+        #         print
+        #     except:
+        #         pass
+        subprocess.call("perl perl/Teaching_material.pl temp.txt", shell=True)
+        subprocess.call("rm temp.txt", shell=True)
 
     return data
 
@@ -318,16 +321,16 @@ def get_homework(opener, account, class_name, show=False):
             i = 0
     if show:
         for d in data:
-            print "NO." + d[0], d[1]
-            print "description:",  d[7],
+            print Color.BOLD + Color.HEADER + "NO." + d[0], d[1] + Color.ENDC + Color.ENDC
+            print Color.BLUE + "description:" + Color.ENDC,  d[7],
             start = d[2].find("File_name=") + len("File_name=")
             end = d[2].find("&", start)
-            print "Attachement:", d[2][start:end]
-            print "Deadline:", d[3]
-            print "File Uploaded:", d[4]
-            print "Grad:", d[5]
-            print "Comment:", d[6]
-            print "#"*50
+            print Color.BLUE + "Attachement:" + Color.ENDC, d[2][start:end]
+            print Color.BLUE + "Deadline:" + Color.ENDC, Color.RED + d[3] + Color.ENDC
+            print Color.BLUE + "File Uploaded:" + Color.ENDC, d[4]
+            print Color.BLUE + "Grad:" + Color.ENDC, d[5]
+            print Color.BLUE + "Comment:" + Color.ENDC, d[6]
+            print
 
     return attachement_url
 
@@ -343,15 +346,17 @@ def upload_homework_file(opener, account, class_name, wk_id, file_name):
 
     from poster.encode import multipart_encode
     url = "https://portalx.yzu.edu.tw/PortalSocialVB/THom/HomeworkList.aspx?Menu=Hom"
-    datagen, headers = multipart_encode({"FileUpload1": open(file_name, "rb"),
-                                         'name': 'test3.txt',
-                                         "wk_id": str(wk_id),
-                                         "agree": "Upload_File",
-                                         "__EVENTVALIDATION": html.find('input', {'id': '__EVENTVALIDATION'}).get('value'),
-                                         "__VIEWSTATE": html.find('input', {'id': '__VIEWSTATE'}).get('value'),
-                                        "__VIEWSTATEGENERATOR": html.find('input', {'id': '__VIEWSTATEGENERATOR'}).get('value'),
-                                         "txt_Memo": ""})
-
+    try:
+        datagen, headers = multipart_encode({"FileUpload1": open(file_name, "rb"),
+                                             'name': 'test3.txt',
+                                             "wk_id": str(wk_id),
+                                             "agree": "Upload_File",
+                                             "__EVENTVALIDATION": html.find('input', {'id': '__EVENTVALIDATION'}).get('value'),
+                                             "__VIEWSTATE": html.find('input', {'id': '__VIEWSTATE'}).get('value'),
+                                            "__VIEWSTATEGENERATOR": html.find('input', {'id': '__VIEWSTATEGENERATOR'}).get('value'),
+                                             "txt_Memo": ""})
+    except:
+        print "no file"
     request = urllib2.Request(url, datagen, headers)
     urllib2.urlopen(request)
 
@@ -387,8 +392,11 @@ def find_key_word(opener, account, class_name, key):
         elif file_name.endswith('pdf'):
             if pdf_parser(path + file_name, key):
                 file_count += 1
+        elif file_name.endswith('doc'):
+            if doc_parser(path + file_name, key):
+                file_count += 1
 
-    print u"共有", file_count, u"個檔案含有:", Color.RED + key
+    print u"共有", file_count, u"個檔案含有:", Color.RED + key + Color.ENDC
 
 
 def get_score(opener, account, semesters=None):
