@@ -46,7 +46,7 @@ yee -i CS312 5 # print only 5 infomation
 yee -t CS312
 yee -t CS312 1 # download first teach material
 ```
-**yee -hw "classname" "number" "file_name" look and download or upload homework.
+**yee -hw "classname" "number" "file_name"** look and download or upload homework.
 
 One argument look homework infomation. 
 
@@ -63,7 +63,7 @@ yee -hw CS312 homework.txt
 yee -a 1
 yee -a 2
 ``` 
-**yee -f "classname" "keyword" Find keyword appear in teach material. Can tell you keyword appear in witch file. And where in file.
+**yee -f "classname" "keyword"** Find keyword appear in teach material. Can tell you keyword appear in witch file. And where in file.
 ```
 yee -f CS312 "process"
 ```
