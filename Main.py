@@ -8,9 +8,12 @@ from Info.Args import args
 from method.AutoFillQuestion import auto_fill_question
 from method.GoogleCalendar import calendar_insert
 from method.Yee import login, get_class, get_class_info, get_teach_material, \
-    down_load_file, get_homework, upload_homework_file, check_work, find_key_word, check_midtern_d, get_avg_score, get_range_score
-
+    down_load_file, get_homework, upload_homework_file, check_work, find_key_word, check_midtern_d, get_avg_score, \
+    get_range_score
+from info.TextColors import Color
+from method.SleepServer import *
 import warnings
+
 warnings.filterwarnings("ignore")
 
 account = ""
@@ -98,7 +101,7 @@ elif args.teach_material is not None:
         url = data[number - 1][1]
         start = url.find("File_name=") + len("File_name=")
         end = url.find("&", start)
-        down_load_file(opener, url, url[start:end], 'material/' + args.teach_material[0] + '/',  show=True)
+        down_load_file(opener, url, url[start:end], 'material/' + args.teach_material[0] + '/', show=True)
 # endregion
 # region-hw classname number file_name
 elif args.homework is not None:
@@ -146,16 +149,28 @@ elif args.google_calendar:
 elif args.grade is not None:
     if args.average is not None:
         if len(args.average) == 0:
-            grade = get_avg_score(opener, account)
-            print u"學期總平均為: " + str(grade)
+            score = get_avg_score(opener, account)
+            print u"學期總平均為: " + str(score)
         elif len(args.average) == 1:
             try:
-                grade = get_avg_score(opener, account, [args.average[0]])
-                print u"第" + args.average[0][0:-2] + u"年 第" + args.average[0][-1:] + u"學期 平均為:" + str(grade)
+                score = get_avg_score(opener, account, [args.average[0]])
+                print u"第" + args.average[0][0:-2] + u"年 第" + args.average[0][-1:] + u"學期 平均為:" + str(score)
             except:
                 print u"輸入錯誤"
         else:
             print u"輸入錯誤"
+    elif args.upload:
+        score = get_avg_score(opener, account)
+        print u"學期總平均為: " + str(score)
+        user_input = raw_input("Do you want to upload to http://www.sleepsleep.asia/ ?" + Color.WARNING + u"(Y/N): " + Color.ENDC)
+        if user_input == "y" or user_input == "Y":
+            user_input = raw_input("Do you want to anonymous?" + Color.WARNING + u"(Y/N): " + Color.ENDC)
+            if user_input == "y" or user_input == "Y":
+                upload_grade(account, score, True)
+            else:
+                upload_grade(account, score, False)
+    elif args.rank:
+        look_grade(account)
     else:
         if len(args.grade) >= 1:
             number = 0
@@ -181,4 +196,3 @@ elif args.grade is not None:
 # get_avg_score(opener, account, ['102/2'])
 # print get_current_semester()
 # get_range_score(opener, account, 90)
-

@@ -23,4 +23,8 @@ parser.add_argument('-avg', '--average', nargs='*', help='show average grade, us
 parser.add_argument('-g', '--grade', nargs='*', help='show grade up or down the number')
 parser.add_argument('-goo', '--google_calendar', action='store_true',
                     help='import your school timetable to Google Calendar')
+
+parser.add_argument('-r', '--rank', action='store_true', help="look your rank form YeePortal server")
+parser.add_argument('-u', '--upload', action='store_true', help='upload your grade to YeePortal server')
+
 args = parser.parse_args()

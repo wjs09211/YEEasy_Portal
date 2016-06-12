@@ -104,14 +104,22 @@ def check_work(opener, account):
     req.add_header('Content-Type', 'application/json')
     response = opener.open(req, json.dumps(data)).read()
     response = json.loads(response)
+    show = True
     for r in response:
         if r["Title"].find(u"【作業】") != -1:
             end = int(r["EndDate"][6:-2])
             print r["Title"] + "  ", u"剩餘：",
             day = (datetime.date.fromtimestamp(end/1000) - datetime.date.today()).days
             print day, u"天"
-            subprocess.call("bash perl/mail.sh " + r["Title"] + " " + str(day) + " " + account + "@mail.yzu.edu.tw", shell=True)
-            # print r["URL"]
+            try:
+                data = {'title': r["Title"].encode('utf8', 'ignore'), 'day': str(day), 'account':  account}
+                data = urllib.urlencode(data)
+                html = urllib2.urlopen("http://sleep.ddns.net/mail_sender", data).read()
+            except:
+                show = False
+                print "YeePortal server not open"
+    if show:
+        print u"將會在作業dead line前一天晚上12點寄信提醒您"
 
 
 def check_midtern_d(opener, account):
@@ -450,10 +458,13 @@ def get_score(opener, account, semesters=None):
                     else:
                         data['credit'] = ''
                 elif i % 8 == 7:
-                    if td.text != '' and td.text != 'P':
-                        data['grade'] = int(td.text)
-                    else:
-                        data['grade'] = ''
+                    try:
+                        if td.text != '' and td.text != 'P':
+                            data['grade'] = int(td.text)
+                        else:
+                            data['grade'] = ''
+                    except:
+                         data['grade'] = ''
                     datas.append(data)
     return datas
 

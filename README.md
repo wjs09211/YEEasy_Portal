@@ -78,4 +78,8 @@ yee -g -avg 102/2 # Show your semester average
 yee -g 60 down # Show class grage which below 60 (fail)
 yee -g 90 up # Show class grage which above 90
 ```
+**yee -g -u** Upload your grade to YeePortal server. you can select anonymous or no anonymous.
 
+**yee -g -r** Show your rank in YeePortal server.
+
+If you want to look your class rank in Yuan Ze University, you need to paid 10 NTD. We write this function to save your money.

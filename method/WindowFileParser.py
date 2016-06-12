@@ -57,6 +57,7 @@ def doc_parser(file_path, key):
     except:
         print u'encode doc error'
 
+
 def docx_parser(file_path, key):
     try:
         key = get_unicode(key)
