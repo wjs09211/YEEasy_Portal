@@ -16,7 +16,7 @@ Then, you need to install something. I write a setup script. Execute it!
 ```
 cd YEEasy_Portal # need to move
 bash setup.sh
-alias yee="python Main.py" # can easy to use
+alias yee="python Main.py" # easy to use
 ```
 
 ## How To Use?
@@ -26,12 +26,12 @@ alias yee="python Main.py" # can easy to use
 yee -l
 yee --login
 ``` 
-**yee -c** look what class you study this semester
+**yee -c** find out what class you study this semester
 ```
 yee -c
 yee --class
 ```
-**yee -cs** look your school timetable
+**yee -cs** find out your school timetable
 ```
 yee -cs
 yee --class_schedule
@@ -41,29 +41,29 @@ yee --class_schedule
 yee -i CS312 # print all infomation
 yee -i CS312 5 # print only 5 infomation
 ```
-**yee -t "classname" "number"** look and download your class teach material.
+**yee -t "classname" "number"** find out and download your class teach material.
 ```
 yee -t CS312
 yee -t CS312 1 # download first teach material
 ```
-**yee -hw "classname" "number" "file_name"** look and download or upload homework.
+**yee -hw "classname" "number" "file_name"** You can get homework detail of class, also donload and upload homework files.
 
-One argument look homework infomation. 
+First argument look homework infomation. 
 
-Two argument download homework attachment. 
+Second argument download homework attachment. 
 
-Three argument upload your homework file. 
+Third argument upload your homework file. 
 ```
 yee -hw CS312
 yee -hw CS312 1
 yee -hw CS312 homework.txt
 ```
-**yee -a "value"** Auto fill class question. Value has 1~5. 1 is very good. 2 is good. 3 is normal. 4 is bad. 5 is very bad.
+**yee -a "value"** Auto fill each questionnaires. We have value from 1~5. 1 is perfect 2 is great. 3 is normal. 4 is bad. 5 is awful
 ```
 yee -a 1
 yee -a 2
 ``` 
-**yee -f "classname" "keyword"** Find keyword appear in teach material. Can tell you keyword appear in witch file. And where in file.
+**yee -f "classname" "keyword"** Find out the position of keywords that show up in every teaching materials, and print the detail. Ex. ??  file , ?? line or ?? slide
 ```
 yee -f CS312 "process"
 ```
@@ -82,4 +82,4 @@ yee -g 90 up # Show class grage which above 90
 
 **yee -g -r** Show your rank in YeePortal server.
 
-If you want to look your class rank in Yuan Ze University, you need to paid 10 NTD. We write this function to save your money.
+Basicly you want to know your class rank in Yuan Ze University, you have to pay 10 NTD. We implement this function to save your money.
