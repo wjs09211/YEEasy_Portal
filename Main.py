@@ -10,7 +10,7 @@ from method.GoogleCalendar import calendar_insert
 from method.Yee import login, get_class, get_class_info, get_teach_material, \
     down_load_file, get_homework, upload_homework_file, check_work, find_key_word, check_midtern_d, get_avg_score, \
     get_range_score
-from info.TextColors import Color
+from Info.TextColors import Color
 from method.SleepServer import *
 import warnings
 
